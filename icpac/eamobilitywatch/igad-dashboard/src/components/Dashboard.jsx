@@ -1,4 +1,5 @@
-import { getCountryData } from '../data/mockData'
+import { useRef } from 'react';
+import { getCountryData } from '../data/mockData';
 import {
   BarChart,
   Bar,
@@ -17,12 +18,32 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer
-} from 'recharts'
+} from 'recharts';
+import DownloadButton from './DownloadButton';
+import {
+  downloadCSV,
+  downloadJSON,
+  prepareSummaryStats,
+  generateFilename
+} from '../utils/downloadUtils';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 function Dashboard({ countryCode, activeTab, isDarkMode }) {
   const data = getCountryData(countryCode);
+
+  // Refs for chart downloads
+  const pieChartRef = useRef(null);
+  const climateVsConflictRef = useRef(null);
+  const quarterlyChartRef = useRef(null);
+  const trendsAreaChartRef = useRef(null);
+  const climateLineChartRef = useRef(null);
+  const conflictLineChartRef = useRef(null);
+  const countryComparisonRef = useRef(null);
+  const mobilityTableRef = useRef(null);
+  const mobilityBarChartRef = useRef(null);
+  const projectionsChartRef = useRef(null);
+  const detailedQuarterlyChartRef = useRef(null);
 
   const formatNumber = (num) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -33,6 +54,16 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
   const renderOverview = () => (
     <div className="space-y-6">
       {/* Summary Statistics */}
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Summary Statistics</h3>
+        <DownloadButton
+          data={prepareSummaryStats(data)}
+          filename="summary-statistics"
+          formats={['csv', 'json', 'pdf']}
+          selectedCountry={countryCode}
+          variant="icon"
+        />
+      </div>
       <div className="grid grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-blue-500">
           <div className="text-sm text-gray-600">Total Displaced</div>
@@ -67,8 +98,18 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
       {/* Charts Grid */}
       <div className="grid grid-cols-2 gap-6">
         {/* Displacement by Cause - Pie Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">Displacement by Cause (2024)</h3>
+        <div className="bg-white rounded-lg shadow-md p-6" ref={pieChartRef}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold text-gray-800">Displacement by Cause (2024)</h3>
+            <DownloadButton
+              data={data.displacementByCause}
+              filename="displacement-by-cause"
+              formats={['csv', 'json', 'png', 'svg', 'pdf']}
+              chartRef={pieChartRef}
+              selectedCountry={countryCode}
+              variant="icon"
+            />
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -91,8 +132,18 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
         </div>
 
         {/* Monthly Trend - Line Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">Climate vs Conflict Displacement</h3>
+        <div className="bg-white rounded-lg shadow-md p-6" ref={climateVsConflictRef}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold text-gray-800">Climate vs Conflict Displacement</h3>
+            <DownloadButton
+              data={data.monthlyTrend}
+              filename="climate-vs-conflict"
+              formats={['csv', 'json', 'png', 'svg', 'pdf']}
+              chartRef={climateVsConflictRef}
+              selectedCountry={countryCode}
+              variant="icon"
+            />
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.monthlyTrend}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -107,8 +158,18 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
         </div>
 
         {/* Quarterly Data - Bar Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">Quarterly Breakdown</h3>
+        <div className="bg-white rounded-lg shadow-md p-6" ref={quarterlyChartRef}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold text-gray-800">Quarterly Breakdown</h3>
+            <DownloadButton
+              data={data.quarterlyData}
+              filename="quarterly-breakdown"
+              formats={['csv', 'json', 'png', 'svg', 'pdf']}
+              chartRef={quarterlyChartRef}
+              selectedCountry={countryCode}
+              variant="icon"
+            />
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data.quarterlyData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -125,26 +186,48 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
 
         {/* Detailed Statistics */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">Detailed Breakdown</h3>
-          <div className="space-y-4">
-            {data.displacementByCause.map((item, index) => (
-              <div key={index} className="border-l-4 pl-4" style={{ borderColor: COLORS[index % COLORS.length] }}>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-medium text-gray-700">{item.cause}</span>
-                  <span className="font-bold text-gray-900">{formatNumber(item.value)}</span>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-semibold text-gray-800">Detailed Breakdown</h3>
+            <DownloadButton
+              data={data.displacementByCause}
+              filename="detailed-breakdown"
+              formats={['csv', 'json', 'pdf']}
+              selectedCountry={countryCode}
+              variant="icon"
+            />
+          </div>
+          <div className="space-y-5">
+            {data.displacementByCause.map((item, index) => {
+              // Define specific colors for each cause
+              const causeColors = {
+                'Drought': '#f97316',      // Orange
+                'Floods': '#3b82f6',       // Blue
+                'Cyclone': '#6b7280',      // Gray
+                'Conflict': '#ef4444',     // Red
+                'Other': '#8b5cf6'         // Purple
+              };
+
+              const color = causeColors[item.cause] || COLORS[index % COLORS.length];
+
+              return (
+                <div key={index}>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-700">{item.cause}</span>
+                    <span className="text-lg font-bold text-gray-900">{formatNumber(item.value)}</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3 mb-1">
+                    <div
+                      className="h-3 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${item.percentage}%`,
+                        backgroundColor: color
+                      }}
+                    />
+                  </div>
+                  <div className="text-xs text-gray-500">{item.percentage}% of total</div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="h-2 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${item.percentage}%`,
-                      backgroundColor: COLORS[index % COLORS.length]
-                    }}
-                  />
-                </div>
-                <div className="text-sm text-gray-500 mt-1">{item.percentage}% of total</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -153,8 +236,18 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
 
   const renderTrends = () => (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-2xl font-semibold mb-4 text-gray-800">Displacement Trends Over Time</h3>
+      <div className="bg-white rounded-lg shadow-md p-6" ref={trendsAreaChartRef}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-2xl font-semibold text-gray-800">Displacement Trends Over Time</h3>
+          <DownloadButton
+            data={data.monthlyTrend}
+            filename="displacement-trends"
+            formats={['csv', 'json', 'png', 'svg', 'pdf']}
+            chartRef={trendsAreaChartRef}
+            selectedCountry={countryCode}
+            variant="icon"
+          />
+        </div>
         <ResponsiveContainer width="100%" height={400}>
           <AreaChart data={data.monthlyTrend}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -169,8 +262,18 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">Monthly Climate Displacement</h3>
+        <div className="bg-white rounded-lg shadow-md p-6" ref={climateLineChartRef}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold text-gray-800">Monthly Climate Displacement</h3>
+            <DownloadButton
+              data={data.monthlyTrend.map(item => ({ month: item.month, climate: item.climate }))}
+              filename="monthly-climate-displacement"
+              formats={['csv', 'json', 'png', 'svg', 'pdf']}
+              chartRef={climateLineChartRef}
+              selectedCountry={countryCode}
+              variant="icon"
+            />
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.monthlyTrend}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -182,8 +285,18 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">Monthly Conflict Displacement</h3>
+        <div className="bg-white rounded-lg shadow-md p-6" ref={conflictLineChartRef}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold text-gray-800">Monthly Conflict Displacement</h3>
+            <DownloadButton
+              data={data.monthlyTrend.map(item => ({ month: item.month, conflict: item.conflict }))}
+              filename="monthly-conflict-displacement"
+              formats={['csv', 'json', 'png', 'svg', 'pdf']}
+              chartRef={conflictLineChartRef}
+              selectedCountry={countryCode}
+              variant="icon"
+            />
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.monthlyTrend}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -195,6 +308,92 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Detailed Trend Analysis */}
+      {data.detailedQuarterlyData && data.detailedQuarterlyData.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Detailed Trend Analysis</h2>
+
+          {/* Quarterly Stacked Bar Chart */}
+          <div className="bg-white rounded-lg shadow-md p-6" ref={detailedQuarterlyChartRef}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-800">Displacement Causes by Quarter</h3>
+              <DownloadButton
+                data={data.detailedQuarterlyData}
+                filename="detailed-quarterly-analysis"
+                formats={['csv', 'json', 'png', 'svg', 'pdf']}
+                chartRef={detailedQuarterlyChartRef}
+                selectedCountry={countryCode}
+                variant="icon"
+              />
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={data.detailedQuarterlyData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="quarter" />
+                <YAxis />
+                <Tooltip formatter={(value) => formatNumber(value)} />
+                <Legend />
+                <Bar dataKey="drought" stackId="a" fill="#f97316" name="Drought" />
+                <Bar dataKey="flood" stackId="a" fill="#38bdf8" name="Flood" />
+                <Bar dataKey="cyclone" stackId="a" fill="#8b5cf6" name="Cyclone" />
+                <Bar dataKey="conflict" stackId="a" fill="#ef4444" name="Conflict" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+        {/* Seasonal Information Cards */}
+        <div className="grid grid-cols-3 gap-6 mt-6">
+          {/* Dry Season Card */}
+          <div className="bg-blue-50 border-l-4 border-blue-600 rounded-lg p-6">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <div className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
+                  Dry Season (Dec-Mar)
+                </div>
+                <h4 className="text-xl font-bold text-blue-900">Peak Drought</h4>
+              </div>
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <p className="text-sm text-blue-800">Highest displacement from water scarcity</p>
+          </div>
+
+          {/* Long Rains Card */}
+          <div className="bg-green-50 border-l-4 border-green-600 rounded-lg p-6">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <div className="text-xs font-semibold text-green-600 uppercase tracking-wide mb-1">
+                  Long Rains (Apr-Jun)
+                </div>
+                <h4 className="text-xl font-bold text-green-900">Flood Risk</h4>
+              </div>
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+              </svg>
+            </div>
+            <p className="text-sm text-green-800">River flooding and displacement</p>
+          </div>
+
+          {/* Short Rains Card */}
+          <div className="bg-orange-50 border-l-4 border-orange-600 rounded-lg p-6">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <div className="text-xs font-semibold text-orange-600 uppercase tracking-wide mb-1">
+                  Short Rains (Oct-Nov)
+                </div>
+                <h4 className="text-xl font-bold text-orange-900">Recovery</h4>
+              </div>
+              <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </div>
+            <p className="text-sm text-orange-800">Return movements increase</p>
+          </div>
+        </div>
+        </div>
+      )}
     </div>
   );
 
@@ -212,8 +411,18 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
 
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-2xl font-semibold mb-4 text-gray-800">Country Comparison - Total Displacement</h3>
+        <div className="bg-white rounded-lg shadow-md p-6" ref={countryComparisonRef}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-2xl font-semibold text-gray-800">Country Comparison - Total Displacement</h3>
+            <DownloadButton
+              data={countryComparison}
+              filename="country-comparison"
+              formats={['csv', 'json', 'png', 'svg', 'pdf']}
+              chartRef={countryComparisonRef}
+              selectedCountry={countryCode}
+              variant="icon"
+            />
+          </div>
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={countryComparison} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" />
@@ -225,6 +434,16 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
           </ResponsiveContainer>
         </div>
 
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-semibold text-gray-800">Country Statistics</h3>
+          <DownloadButton
+            data={countryComparison}
+            filename="country-statistics"
+            formats={['csv', 'json', 'pdf']}
+            selectedCountry={countryCode}
+            variant="icon"
+          />
+        </div>
         <div className="grid grid-cols-3 gap-4">
           {countryComparison.map((country, index) => (
             <div key={index} className="bg-white rounded-lg shadow-md p-4 border-l-4 border-blue-500">
@@ -249,8 +468,18 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
 
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-2xl font-semibold mb-4 text-gray-800">Cross-Border Mobility Patterns</h3>
+        <div className="bg-white rounded-lg shadow-md p-6" ref={mobilityTableRef}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-2xl font-semibold text-gray-800">Cross-Border Mobility Patterns</h3>
+            <DownloadButton
+              data={mobilityData}
+              filename="cross-border-mobility"
+              formats={['csv', 'json', 'png', 'pdf']}
+              chartRef={mobilityTableRef}
+              selectedCountry={countryCode}
+              variant="icon"
+            />
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -283,8 +512,18 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">Migration Volume by Route</h3>
+        <div className="bg-white rounded-lg shadow-md p-6" ref={mobilityBarChartRef}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold text-gray-800">Migration Volume by Route</h3>
+            <DownloadButton
+              data={mobilityData}
+              filename="migration-volume-by-route"
+              formats={['csv', 'json', 'png', 'svg', 'pdf']}
+              chartRef={mobilityBarChartRef}
+              selectedCountry={countryCode}
+              variant="icon"
+            />
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={mobilityData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -328,8 +567,18 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-2xl font-semibold mb-4 text-gray-800">Displacement Projections (2024-2030)</h3>
+        <div className="bg-white rounded-lg shadow-md p-6" ref={projectionsChartRef}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-2xl font-semibold text-gray-800">Displacement Projections (2024-2030)</h3>
+            <DownloadButton
+              data={projectionData}
+              filename="displacement-projections"
+              formats={['csv', 'json', 'png', 'svg', 'pdf']}
+              chartRef={projectionsChartRef}
+              selectedCountry={countryCode}
+              variant="icon"
+            />
+          </div>
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={projectionData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -343,6 +592,20 @@ function Dashboard({ countryCode, activeTab, isDarkMode }) {
           </ResponsiveContainer>
         </div>
 
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-semibold text-gray-800">Key Projections</h3>
+          <DownloadButton
+            data={[
+              { year: 2025, projection: Math.round(data.totalDisplaced * 1.08), change: '+8%' },
+              { year: 2027, projection: Math.round(data.totalDisplaced * 1.22), change: '+22%' },
+              { year: 2030, projection: Math.round(data.totalDisplaced * 1.42), change: '+42%' }
+            ]}
+            filename="key-projections"
+            formats={['csv', 'json', 'pdf']}
+            selectedCountry={countryCode}
+            variant="icon"
+          />
+        </div>
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-blue-500">
             <div className="text-sm text-gray-600">2025 Projection</div>

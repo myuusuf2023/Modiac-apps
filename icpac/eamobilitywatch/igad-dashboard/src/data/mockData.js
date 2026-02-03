@@ -45,6 +45,26 @@ export const countryData = {
       { quarter: 'Q2 2024', drought: 680000, flood: 420000, conflict: 1100000 },
       { quarter: 'Q3 2024', drought: 450000, flood: 310000, conflict: 950000 },
       { quarter: 'Q4 2024', drought: 580000, flood: 390000, conflict: 1050000 }
+    ],
+    detailedQuarterlyData: [
+      { quarter: '2020 Q1', year: 2020, q: 1, conflict: 95000, cyclone: 25000, drought: 105000, flood: 65000 },
+      { quarter: '2020 Q2', year: 2020, q: 2, conflict: 110000, cyclone: 30000, drought: 95000, flood: 75000 },
+      { quarter: '2020 Q3', year: 2020, q: 3, conflict: 98000, cyclone: 28000, drought: 90000, flood: 72000 },
+      { quarter: '2020 Q4', year: 2020, q: 4, conflict: 92000, cyclone: 22000, drought: 85000, flood: 68000 },
+      { quarter: '2021 Q1', year: 2021, q: 1, conflict: 115000, cyclone: 32000, drought: 125000, flood: 88000 },
+      { quarter: '2021 Q2', year: 2021, q: 2, conflict: 125000, cyclone: 35000, drought: 115000, flood: 95000 },
+      { quarter: '2021 Q3', year: 2021, q: 3, conflict: 105000, cyclone: 28000, drought: 95000, flood: 82000 },
+      { quarter: '2021 Q4', year: 2021, q: 4, conflict: 108000, cyclone: 30000, drought: 98000, flood: 85000 },
+      { quarter: '2022 Q1', year: 2022, q: 1, conflict: 135000, cyclone: 38000, drought: 140000, flood: 105000 },
+      { quarter: '2022 Q2', year: 2022, q: 2, conflict: 155000, cyclone: 42000, drought: 155000, flood: 125000 },
+      { quarter: '2022 Q3', year: 2022, q: 3, conflict: 128000, cyclone: 35000, drought: 125000, flood: 98000 },
+      { quarter: '2022 Q4', year: 2022, q: 4, conflict: 118000, cyclone: 32000, drought: 115000, flood: 92000 },
+      { quarter: '2023 Q1', year: 2023, q: 1, conflict: 145000, cyclone: 40000, drought: 165000, flood: 115000 },
+      { quarter: '2023 Q2', year: 2023, q: 2, conflict: 158000, cyclone: 45000, drought: 175000, flood: 135000 },
+      { quarter: '2023 Q3', year: 2023, q: 3, conflict: 138000, cyclone: 38000, drought: 148000, flood: 108000 },
+      { quarter: '2023 Q4', year: 2023, q: 4, conflict: 125000, cyclone: 35000, drought: 135000, flood: 98000 },
+      { quarter: '2024 Q1', year: 2024, q: 1, conflict: 152000, cyclone: 42000, drought: 178000, flood: 122000 },
+      { quarter: '2024 Q2', year: 2024, q: 2, conflict: 165000, cyclone: 48000, drought: 188000, flood: 142000 }
     ]
   },
   DJI: {
